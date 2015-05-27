@@ -1,0 +1,421 @@
+<html>
+  <head>
+    <script type="text/javascript"
+          src="https://www.google.com/jsapi?autoload={
+            'modules':[{
+              'name':'visualization',
+              'version':'1',
+              'packages':['corechart']
+            }]
+          }"></script>
+
+    <script src='jquery-1.11.3.min.js'></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <style>
+      @import url('my.css');
+    </style>
+    <script type="text/javascript">
+    
+    //Radio Buttons
+    function rel_click() {
+        document.getElementById('relative_time').style.display = "inline";
+        document.getElementById('absolute_time').style.display = "none";
+    }
+    
+    function abs_click() {
+        document.getElementById('absolute_time').style.display = "inline";
+        document.getElementById('relative_time').style.display = "none";
+    }
+    
+    //Clock functions
+    function clock_change() {
+        var clock_value = document.getElementById('clock_select').value;
+        var current_from_hour = document.getElementById('from_hr').value;
+        var current_to_hour = document.getElementById('to_hr').value;
+        if (clock_value=="24hr") {
+            clock_24();
+        }
+        else if (clock_value=="12hr") {
+            if (parseInt(current_from_hour)>12) {
+                document.getElementById('from_hr').value = "01";
+            }
+            else if (current_from_hour=="00") {
+                document.getElementById('from_hr').value = "12";
+            }
+            if (parseInt(current_to_hour)>12) {
+                document.getElementById('to_hr').value = "01";
+            }
+            else if (current_to_hour=="00") {
+                document.getElementById('to_hr').value = "12";
+            }
+            clock_12();
+        }
+    }
+    
+    function clock_24() {
+        var elements = document.getElementsByClassName("hours");
+        for (var i=0; i < elements.length; i++) {
+            elements[i].style.display = "block";
+        }
+        document.getElementById("from_am_pm").style.display = "none";
+        document.getElementById("to_am_pm").style.display = "none";
+    }
+    
+    function clock_12() {
+        var elements = document.getElementsByClassName("hours");
+        for (var i=0; i < elements.length; i++) {
+            elements[i].style.display = "none";
+        }
+        document.getElementById("from_am_pm").style.display = "inline";
+        document.getElementById("to_am_pm").style.display = "inline";
+    }
+    
+    function get_time() {
+        
+        //Absolute Time
+        if (document.getElementById("abs").checked) {
+            var clock_setting = document.getElementById("clock_select").value;
+            var from_date = document.getElementById("datepicker").value;
+            var from_hour = document.getElementById("from_hr").value;
+            var from_min = document.getElementById("from_min").value;
+            var from_sec = document.getElementById("from_sec").value;
+            var to_date = document.getElementById("datepicker2").value;
+            var to_hour = document.getElementById("to_hr").value;
+            var to_min = document.getElementById("to_min").value;
+            var to_sec = document.getElementById("to_sec").value;
+            var from_array = from_date.split("/");
+            var from_year = from_array[2];
+            var from_month = from_array[0];
+            var from_day = from_array[1];
+            var to_array = to_date.split("/");
+            var to_year = to_array[2];
+            var to_month = to_array[0];
+            var to_day = to_array[1];
+            //console.log(clock_setting);
+            
+            if (clock_setting=="12hr") {
+                var from_am_pm = document.getElementById("from_am_pm").value;
+                var to_am_pm = document.getElementById("to_am_pm").value; 
+                if (from_am_pm=="PM") {
+                    if (from_hour!="12") {
+                        from_hour = String(parseInt(from_hour) + 12);
+                    }
+                }
+                if ((from_am_pm=="AM") && (from_hour=="12")) {
+                    from_hour = "00";
+                }
+                if (to_am_pm=="PM") {
+                    if (to_hour!="12") {
+                        to_hour = String(parseInt(to_hour) + 12);
+                    }
+                }
+                if ((to_am_pm=="AM") && (to_hour=="12")) {
+                    to_hour = "00";
+                }
+            }
+            
+            
+            //console.log(String(parseInt(from_hour)+12));
+            var from_date_test = new Date(from_year, from_month-1, from_day, from_hour, from_min, from_sec)
+            var to_date_test = new Date(to_year, to_month-1, to_day, to_hour, to_min, to_sec)
+            var from_date_full = new Date(from_year, from_month-1, from_day, from_hour, from_min, from_sec).getTime();
+            var to_date_full = new Date(to_year, to_month-1, to_day, to_hour, to_min, to_sec).getTime();
+
+            //console.log(from_date_test);
+            //console.log(to_date_test);
+            //console.log(from_date_full);
+            //console.log(to_date_full);
+            
+            if (to_date_full<from_date_full) {
+                alert("To date must be after From date");
+                return false;
+            }
+            if ((to_date_full-from_date_full)>1500000000) {
+                alert("More than 5000 data points, reduce timespan");
+                return false;
+            }
+            
+            return [from_date_full,to_date_full];
+        }
+        
+        //Relative Time
+        if (document.getElementById("rel").checked) {
+            var from_value = parseInt(document.getElementById("rel_from_value").value);
+            var from_time = document.getElementById("rel_time1").value;
+            var to_value = parseInt(document.getElementById("rel_to_value").value);
+            var to_time = document.getElementById("rel_time2").value;
+            var from_final = 0;
+            var to_final = 0;
+            var current_time = Date.now();
+            //var hrs = -(new Date().getTimezoneOffset() / 60)
+            //var current_time = Date.now() + (hrs*60*60*1000);
+            
+            //console.log(Date.prototype.toLocaleString().getTime());
+            //console.log("");
+            //console.log(from_value);
+            //console.log(to_value);
+            //console.log(current_time);
+            //console.log(hrs);
+            
+            //note: month is assumed to be 30 days, can be changed with get/set
+            if (from_time=="seconds") {from_final = current_time - (from_value * 1000);}
+            if (from_time=="minutes") {from_final = current_time - (from_value * 1000 * 60);}
+            if (from_time=="hours") {from_final = current_time - (from_value * 1000 * 60 * 60);}
+            if (from_time=="days") {from_final = current_time - (from_value * 1000 * 60 * 60 * 24);}
+            if (from_time=="weeks") {from_final = current_time - (from_value * 1000 * 60 * 60 * 24 * 7);}
+            if (from_time=="months") {from_final = current_time - (from_value * 1000 * 60 * 60 * 24 * 30);}
+            if (from_time=="years") {from_final = current_time - (from_value * 1000 * 60 * 60 * 24 * 365);}
+            
+            if (to_time=="seconds") {to_final = current_time - (to_value * 1000);}
+            if (to_time=="minutes") {to_final = current_time - (to_value * 1000 * 60);}
+            if (to_time=="hours") {to_final = current_time - (to_value * 1000 * 60 * 60);}
+            if (to_time=="days") {to_final = current_time - (to_value * 1000 * 60 * 60 * 24);}
+            if (to_time=="weeks") {to_final = current_time - (to_value * 1000 * 60 * 60 * 24 * 7);}
+            if (to_time=="months") {to_final = current_time - (to_value * 1000 * 60 * 60 * 24 * 30);}
+            if (to_time=="years") {to_final = current_time - (to_value * 1000 * 60 * 60 * 24 * 365);}
+            
+            if (from_final > to_final) {
+            alert("To date must be after From date");
+                return false;
+            }
+            if ((to_final-from_final)>1500000000) {
+                alert("More than 5000 data points, reduce timespan");
+                return false;
+            }
+            
+            return [from_final, to_final];
+        }
+    }
+    
+    //Date pickers
+    $(function() {
+    $( "#datepicker" ).datepicker({
+    autoSize: true
+    });
+    });
+    
+    $(function() {
+    $( "#datepicker2" ).datepicker({
+    autoSize: true
+    });
+    });
+    
+    //Set dylos combobox options
+    $.ajax({type: "POST", url:'dylosQuery.php', success: function (data) {
+        var d_list = data.split(",");
+        var options = document.getElementById('dylos_combobox').options;
+        for (var i = 0, n = d_list.length; i < n ; i++) {
+            var newItem = document.createElement("option");
+            newItem.value = d_list[i];
+            newItem.text = d_list[i];
+            document.getElementById('dylos_combobox').options.add(newItem);
+        }
+    }});
+    
+    //Initial graph
+    google.setOnLoadCallback(ajaxQuery("Dylos20","bin1","1432580469000","1432586469000"));
+    
+    //Call PHP graphing functions
+    function ajaxQuery(dylos,bins,t_from,t_to) {
+    jQuery.ajax({
+        type: "POST",
+        url: 'KC.php',
+        dataFilter: function (data) {
+            //console.log(data);
+            if (data!="Empty") {
+                return eval(data);
+            }
+            else {
+                return data;
+            }
+        },
+        data: {dylosNames: dylos, bins: bins, t_from: t_from, t_to: t_to},
+        error: function (err, errText) {
+            console.log(errText);
+        },
+        success: function (obj) {
+            if (!obj) {
+                console.log("No data for selected period.");
+                alert("No data for selected period.");
+            }
+            else {
+                console.log(obj);
+                drawChart(obj,"Dylos Data");
+            }
+        }
+    })
+    }
+      
+    //Graph the data 
+    function loadGraph() {
+        var dylos = "";
+        var bins = "";
+        var bin_names = ["B1","B2","B3","B4"];
+        var d_list = document.getElementById('dylos_combobox').options;
+        for (var i = 0; i < d_list.length; i++) {
+            if (d_list[i].selected) {
+                if (dylos == "") {dylos += d_list[i].value;}
+                else {dylos += "," + d_list[i].value;}
+            }
+        }
+        for (var i = 0; i < bin_names.length; i++) {
+            if (document.getElementById(bin_names[i]).checked) {
+                if (bins == "") {bins += document.getElementById(bin_names[i]).value;}
+                else {bins += "," + document.getElementById(bin_names[i]).value;}
+                }
+        }
+        if (get_time()) {
+            var time = get_time();
+            //console.log(bins);
+            //console.log(dylos);
+            //console.log(time[0]);
+            //console.log(time[1]);
+            ajaxQuery(dylos,bins,time[0],time[1]);
+        }
+    }  
+
+    //Draw the chart
+    function drawChart(data2,graph_name) {
+        var data = google.visualization.arrayToDataTable(data2);
+        //var data = google.visualization.arrayToDataTable([['Timestamp','Bin1'],['10:10 01/01/15',10],['10:20 01/01/15',20]]);
+        //var dataFormatter = new google.visualization.DateFormat({ pattern: "HH:mm dd/MM/yy" });
+        //dataFormatter.format(data, 0);
+        var options = {
+            title: graph_name,
+            explorer: {},
+            pointSize: 3,
+            pointsVisible: true,
+            //hAxis: { format: 'HH:mm dd/MM/yy' },
+            legend: { position: 'bottom' }
+        };
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+        if (document.getElementById('loading')) {
+            document.getElementById('loading').style.display="none";
+        }
+        chart.draw(data, options);
+    }
+    </script>
+  </head>
+  
+  
+  
+  <body>
+  
+    <div id="curve_chart">
+    <div id="loading"><p id="loading_text"><br><br><br>Graph loading...</p> </div>
+    </div>
+    <br>
+    <div id="control_panel">
+    <h1>Control Panel</h1>
+    <h3>Time Control</h3>
+
+    Absolute <input id="abs" type="radio" name="abs_rel" value="absolute" checked onclick="abs_click();">
+    Relative <input id="rel" type="radio" name="abs_rel" value="relative" onclick="rel_click();">
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    
+    <div id="absolute_time">
+    <select NAME="clock" onclick="clock_change();" id="clock_select"><option selected> 24hr </option><option> 12hr </option></select>
+    <p>From: <input type="text" id="datepicker">
+    <select NAME="Time" id="from_hr">
+    <option selected  class="hours"> 00
+    <option> 01 </option><option> 02 </option><option> 03 </option><option> 04 </option><option> 05 </option><option> 06 </option><option> 07 </option><option> 08 </option><option> 09 </option><option> 10 </option>
+    <option> 11 </option><option> 12 </option><option class="hours"> 13 </option><option class="hours"> 14 </option><option class="hours"> 15 </option><option class="hours"> 16 </option><option class="hours"> 17 </option><option class="hours"> 18 </option><option class="hours"> 19 </option><option class="hours"> 20 </option>
+    <option class="hours"> 21 </option><option class="hours"> 22 </option><option class="hours"> 23 </option><option class="hours"> 24 </option>
+    </select>:
+    <select NAME="Time2" id="from_min">
+    <option selected> 00
+    <option> 01 </option><option> 02 </option><option> 03 </option><option> 04 </option><option> 05 </option><option> 06 </option><option> 07 </option><option> 08 </option><option> 09 </option><option> 10 </option>
+    <option> 11 </option><option> 12 </option><option> 13 </option><option> 14 </option><option> 15 </option><option> 16 </option><option> 17 </option><option> 18 </option><option> 19 </option><option> 20 </option>
+    <option> 21 </option><option> 22 </option><option> 23 </option><option> 24 </option><option> 25 </option><option> 26 </option><option> 27 </option><option> 28 </option><option> 29 </option><option> 30 </option>
+    <option> 31 </option><option> 32 </option><option> 33 </option><option> 34 </option><option> 35 </option><option> 36 </option><option> 37 </option><option> 38 </option><option> 39 </option><option> 40 </option>
+    <option> 41 </option><option> 42 </option><option> 43 </option><option> 44 </option><option> 45 </option><option> 46 </option><option> 47 </option><option> 48 </option><option> 49 </option><option> 50 </option>
+    <option> 51 </option><option> 52 </option><option> 53 </option><option> 54 </option><option> 55 </option><option> 56 </option><option> 57 </option><option> 58 </option><option> 59 </option><option> 60 </option>
+    </select>:
+    <select NAME="Time3" id="from_sec">
+    <option selected> 00
+    <option> 01 </option><option> 02 </option><option> 03 </option><option> 04 </option><option> 05 </option><option> 06 </option><option> 07 </option><option> 08 </option><option> 09 </option><option> 10 </option>
+    <option> 11 </option><option> 12 </option><option> 13 </option><option> 14 </option><option> 15 </option><option> 16 </option><option> 17 </option><option> 18 </option><option> 19 </option><option> 20 </option>
+    <option> 21 </option><option> 22 </option><option> 23 </option><option> 24 </option><option> 25 </option><option> 26 </option><option> 27 </option><option> 28 </option><option> 29 </option><option> 30 </option>
+    <option> 31 </option><option> 32 </option><option> 33 </option><option> 34 </option><option> 35 </option><option> 36 </option><option> 37 </option><option> 38 </option><option> 39 </option><option> 40 </option>
+    <option> 41 </option><option> 42 </option><option> 43 </option><option> 44 </option><option> 45 </option><option> 46 </option><option> 47 </option><option> 48 </option><option> 49 </option><option> 50 </option>
+    <option> 51 </option><option> 52 </option><option> 53 </option><option> 54 </option><option> 55 </option><option> 56 </option><option> 57 </option><option> 58 </option><option> 59 </option><option> 60 </option>
+    </select>&nbsp;
+    <select NAME="clock" id="from_am_pm"><option selected> AM </option><option> PM </option></select>
+    <br>
+    </p>
+    
+    <p>To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="datepicker2">
+    <select NAME="Time" id="to_hr">
+    <option selected  class="hours"> 00
+    <option> 01 </option><option> 02 </option><option> 03 </option><option> 04 </option><option> 05 </option><option> 06 </option><option> 07 </option><option> 08 </option><option> 09 </option><option> 10 </option>
+    <option> 11 </option><option> 12 </option><option class="hours"> 13 </option><option class="hours"> 14 </option><option class="hours"> 15 </option><option class="hours"> 16 </option><option class="hours"> 17 </option><option class="hours"> 18 </option><option class="hours"> 19 </option><option class="hours"> 20 </option>
+    <option class="hours"> 21 </option><option class="hours"> 22 </option><option class="hours"> 23 </option><option class="hours"> 24 </option>
+    </select>:
+    <select NAME="Time2" id="to_min">
+    <option selected> 00
+    <option> 01 </option><option> 02 </option><option> 03 </option><option> 04 </option><option> 05 </option><option> 06 </option><option> 07 </option><option> 08 </option><option> 09 </option><option> 10 </option>
+    <option> 11 </option><option> 12 </option><option> 13 </option><option> 14 </option><option> 15 </option><option> 16 </option><option> 17 </option><option> 18 </option><option> 19 </option><option> 20 </option>
+    <option> 21 </option><option> 22 </option><option> 23 </option><option> 24 </option><option> 25 </option><option> 26 </option><option> 27 </option><option> 28 </option><option> 29 </option><option> 30 </option>
+    <option> 31 </option><option> 32 </option><option> 33 </option><option> 34 </option><option> 35 </option><option> 36 </option><option> 37 </option><option> 38 </option><option> 39 </option><option> 40 </option>
+    <option> 41 </option><option> 42 </option><option> 43 </option><option> 44 </option><option> 45 </option><option> 46 </option><option> 47 </option><option> 48 </option><option> 49 </option><option> 50 </option>
+    <option> 51 </option><option> 52 </option><option> 53 </option><option> 54 </option><option> 55 </option><option> 56 </option><option> 57 </option><option> 58 </option><option> 59 </option><option> 60 </option>
+    </select>:
+    <select NAME="Time3" id="to_sec">
+    <option selected> 00
+    <option> 01 </option><option> 02 </option><option> 03 </option><option> 04 </option><option> 05 </option><option> 06 </option><option> 07 </option><option> 08 </option><option> 09 </option><option> 10 </option>
+    <option> 11 </option><option> 12 </option><option> 13 </option><option> 14 </option><option> 15 </option><option> 16 </option><option> 17 </option><option> 18 </option><option> 19 </option><option> 20 </option>
+    <option> 21 </option><option> 22 </option><option> 23 </option><option> 24 </option><option> 25 </option><option> 26 </option><option> 27 </option><option> 28 </option><option> 29 </option><option> 30 </option>
+    <option> 31 </option><option> 32 </option><option> 33 </option><option> 34 </option><option> 35 </option><option> 36 </option><option> 37 </option><option> 38 </option><option> 39 </option><option> 40 </option>
+    <option> 41 </option><option> 42 </option><option> 43 </option><option> 44 </option><option> 45 </option><option> 46 </option><option> 47 </option><option> 48 </option><option> 49 </option><option> 50 </option>
+    <option> 51 </option><option> 52 </option><option> 53 </option><option> 54 </option><option> 55 </option><option> 56 </option><option> 57 </option><option> 58 </option><option> 59 </option><option> 60 </option>
+    </select>&nbsp;
+    <select NAME="clock" id="to_am_pm"><option selected> AM </option><option> PM </option></select>
+    </p>
+    </div>
+    
+    <div id="relative_time">
+    <br>
+    <p>From: 
+    <input type="text" id="rel_from_value" name="Textbox" maxlength="2" />
+    <select NAME="rel_time1" id="rel_time1">
+    <option> seconds </option><option> minutes </option><option selected> hours </option><option> days </option>
+    <option> weeks </option><option> months </option><option> years </option>
+    </select>
+    <br>
+    </p>
+    <p>To:&nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="text" id="rel_to_value" name="Textbox2" maxlength="2" />
+    <select NAME="rel_time2" id="rel_time2">
+    <option> seconds </option><option> minutes </option><option selected> hours </option><option> days </option>
+    <option> weeks </option><option> months </option><option> years </option>
+    </select>
+    </p>
+    </div>
+    
+    <div id="particle_size_select">
+    <h3>Select Particle Size</h3>
+    <p><input id="B1" type="checkbox" name="Bin" value="bin1">>0.5um</p>
+    <p><input id="B2" type="checkbox" name="Bin" value="bin2">>1um</p>
+    <p><input id="B3" type="checkbox" name="Bin" value="bin3">>2.5um</p>
+    <p><input id="B4" type="checkbox" name="Bin" value="bin4">>10um</p>
+    </div>
+    <br><br>
+    
+    <div id="dylos_select">
+    <h3>Select Dylos</h3>
+    <select NAME="dylos" multiple="multiple" id="dylos_combobox"></select>
+    </div>
+    <br><br>
+    
+    <div id="bottom_buttons">
+    <input id="graphButton" type="button" value="Graph" onclick="loadGraph();"/>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <input id="saveButton" type="button" value="Save" onclick="saveGraph();" style="display:none"/>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <input id="loadButton" type="button" value="Load" onclick="loadData();" style="display:none"/>
+    </div>
+    </div>
+  </body>
+</html>
