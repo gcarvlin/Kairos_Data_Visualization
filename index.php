@@ -1,8 +1,5 @@
-<?php // authenticate.php, modified from: http://lpmj.net/4thedition/  Example 12-4
-  $hn = 'localhost';
-  $db = 'auth';
-  $un = 'root';
-  $pw = '';
+<?php // authenticate.php
+  require_once 'login.php';
   $connection = new mysqli($hn, $un, $pw, $db);
   
   function redirect($url) {
@@ -41,7 +38,7 @@
             $result->close();
             session_start();
             $_SESSION['dylos'] = $row[0];
-            redirect("gviz.html");}
+            redirect("index.html");}
         else die("Invalid username/password combination");
     }
     else die("Invalid username/password combination");

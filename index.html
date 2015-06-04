@@ -1,5 +1,7 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
+  <meta charset="utf-8"/>
     <script type="text/javascript"
           src="https://www.google.com/jsapi?autoload={
             'modules':[{
@@ -149,6 +151,13 @@
             var from_final = 0;
             var to_final = 0;
             var current_time = Date.now();
+            console.log(to_value);
+            
+            //if to time is empty assume to current time
+            if (!to_value) {
+                to_value = 0;
+            }
+            
             //var hrs = -(new Date().getTimezoneOffset() / 60)
             //var current_time = Date.now() + (hrs*60*60*1000);
             
@@ -225,6 +234,7 @@
         dataFilter: function (data) {
             //console.log(data);
             if (data!="Empty") {
+                data=data.replace(/1\.1/g, 'null');
                 return eval(data);
             }
             else {
@@ -270,8 +280,8 @@
             var time = get_time();
             //console.log(bins);
             //console.log(dylos);
-            //console.log(time[0]);
-            //console.log(time[1]);
+            console.log(time[0]);
+            console.log(time[1]);
             ajaxQuery(dylos,bins,time[0],time[1]);
         }
     }  
@@ -287,6 +297,8 @@
             explorer: {},
             pointSize: 3,
             pointsVisible: true,
+            hAxis: {slantedText: true},
+            //hAxis.slantedTextAngle: 30,
             //hAxis: { format: 'HH:mm dd/MM/yy' },
             legend: { position: 'bottom' }
         };
